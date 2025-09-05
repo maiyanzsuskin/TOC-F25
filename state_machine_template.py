@@ -7,7 +7,7 @@ import itertools
 import networkx as nx
 import matplotlib.pyplot as plt
 import time
-from itertools import product
+from itertools import product, chain
 
 def compose(f1,f2):
     '''Assumes that f1 and f2 are dictionaries that represent functions.
@@ -30,7 +30,6 @@ class state_machine(object):
         
         #TODO: Initialize in any way you see fit.
        
-        
     #Operations on machines
     def iterative_match(self,input_string:str) -> bool:
         '''Assumes that the string is a string in the alphabet.
@@ -62,4 +61,6 @@ class state_machine(object):
 
         See state_machines_examples_template.py for examples.
         '''
-        pass    
+        states = set(chain([x.keys() for x in transitions.values()]))
+        
+        return state_machine(states, initial, transitions, transitions.keys(), {q : q in accept_states for q in states})   
