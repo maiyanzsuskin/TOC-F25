@@ -59,7 +59,7 @@ def implication_machine():
     return state_machine.init_from_partial_def(transitions, 'no_prev',['prev_T'])
 
 def letter_counting_machine(multiple_dict={'0':2, '1':3}):
-    '''Assumes that mulitple_dict is a dictionary whose keys are the letters
+    '''Assumes that multiple_dict is a dictionary whose keys are the letters
     The values are positive integers.
     The machine accepts iff letter appears a multiple of multiple_dict[letter] many times.'''
     pass
