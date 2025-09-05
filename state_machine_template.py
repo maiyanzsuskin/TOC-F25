@@ -7,32 +7,50 @@ import itertools
 import networkx as nx
 import matplotlib.pyplot as plt
 import time
+from itertools import product
 
 def compose(f1,f2):
     '''Assumes that f1 and f2 are dictionaries that represent functions.
     Returns a dictionary whose keys are those of f1 and that represents the composition of f1 and f2.'''
-    return {key:f2[f1[key]] for key in f1}
+    return {key:f2[f1[key]] for key in f1.keys()}
 
 
 class state_machine(object):
     
-    def __init__(self,args):
+    def __init__(self, Q, q0, delta:dict, sigma:tuple, accept_states:dict):
+        '''Q is the states, q0 is the inital state, delta is the transition function, sigma is the alphabet
+        delta := dict[letters: dict[states, states]]
+        accept states = {q:True if q is an accept state else q:False for q in Q}'''
+        assert q0 in Q, "q0 not in Q!"
+        assert all([d in sigma for d in delta.keys()]), "Key in delta not in sigma!"
+        self.Q = Q
+        self.q = q0
+        self.sigma = sigma
+        self.delta = delta
+        
         #TODO: Initialize in any way you see fit.
-        pass
+       
+        
     #Operations on machines
-    def iterative_match(self,input_string):
+    def iterative_match(self,input_string:str) -> bool:
         '''Assumes that the string is a string in the alphabet.
         Returns True or False, depending on whether or not the input_string is accepted.
         '''
-        pass
+        if not input_string: #if input_string is empty
+            return self.accept_states[self.q] #True only if an accept state currently
+        else: 
+            self.q = self.delta[input_string[0]][self.q]
+            return self.iterative_match(input_string[1:])
+
+        
     def complement(self):
         '''Returns the complement machine, that accepts the strings that the original machine does not accept'''
-        pass
+        return state_machine(self.Q, self.q0, self.delta, self.sigma, {q : not self.accept_states[q] for q in self.Q})
 
     def intersection(self,other):
         '''other is assumed to be a machine with the same alphabet.
         returns a machine that accepts when both self and other accept.'''
-        pass
+        return state_machine(product(self.Q, other.Q), (self.q0, other.q0), )
     
     @classmethod
     def init_from_partial_def(cls,transitions,initial,accept_states):
