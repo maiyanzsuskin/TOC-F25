@@ -1,11 +1,13 @@
 #This file contains examples of finite state machines.
 from state_machine_template import *
+from functools import reduce
 import random
 
 def basic_example_state_machine():
     '''A first example provided about how to use init_from_partial_def
     '''
     return state_machine.init_from_partial_def({'1':{'zero':'one','one':'zero'}, '0':{'zero':'zero'}},'zero',['zero','one'])
+
 def exercise_221():
     '''This example is provided for you. See Hopcroft and Ullman Exercise 2.2.1
     We label the states by three letters of d's (for diagonal) and a's, then L or R, depending on whether the marble exits at C or D
@@ -62,7 +64,9 @@ def letter_counting_machine(multiple_dict={'0':2, '1':3}):
     '''Assumes that multiple_dict is a dictionary whose keys are the letters
     The values are positive integers.
     The machine accepts iff letter appears a multiple of multiple_dict[letter] many times.'''
+    machines = []
     pass
+
 def divisibility_machine(b,k):
     '''Returns a machine that accepts the strings of base-b that are divisible by k.
     Assumes b is between 2 and 10, k is between 2 and 20.

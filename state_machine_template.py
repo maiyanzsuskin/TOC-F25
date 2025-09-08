@@ -17,7 +17,7 @@ def compose(f1,f2):
 
 class state_machine(object):
     
-    def __init__(self, Q, q0, delta:dict, sigma:tuple, accept_states:dict):
+    def __init__(self, Q, q0, delta:dict, sigma:set, accept_states:dict):
         '''Q is the states, q0 is the inital state, delta is the transition function, sigma is the alphabet
         delta := dict[letters: dict[states, states]]
         accept states = {q:True if q is an accept state else q:False for q in Q}'''
@@ -41,7 +41,6 @@ class state_machine(object):
             self.q = self.delta[input_string[0]][self.q]
             return self.iterative_match(input_string[1:])
 
-        
     def complement(self):
         '''Returns the complement machine, that accepts the strings that the original machine does not accept'''
         return state_machine(self.Q, self.q0, self.delta, self.sigma, {q : not self.accept_states[q] for q in self.Q})
@@ -49,7 +48,13 @@ class state_machine(object):
     def intersection(self,other):
         '''other is assumed to be a machine with the same alphabet.
         returns a machine that accepts when both self and other accept.'''
-        return state_machine(product(self.Q, other.Q), (self.q0, other.q0), )
+        alphabet = product(self.sigma, other.sigma)
+        delta = {a : {(u,v) : (self.delta[a][u], other.delta[a][v]) for u,v in product(self.Q, other.Q)} for a in alphabet}
+        accept_states = {(u,v) : u and v for u,v in product(self.Q, other.Q)}
+        return state_machine(product(self.Q, other.Q), (self.q0, other.q0), delta=delta, sigma=alphabet, accept_states=accept_states)
+    
+    def union(self, other):
+        return self.complement().intersection(other.complement()).complement()
     
     @classmethod
     def init_from_partial_def(cls,transitions,initial,accept_states):
