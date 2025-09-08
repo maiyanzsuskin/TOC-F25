@@ -64,7 +64,6 @@ def letter_counting_machine(multiple_dict={'0':2, '1':3}):
     '''Assumes that multiple_dict is a dictionary whose keys are the letters
     The values are positive integers.
     The machine accepts iff letter appears a multiple of multiple_dict[letter] many times.'''
-    machines = []
     pass
 
 def divisibility_machine(b,k):
