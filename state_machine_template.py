@@ -7,7 +7,8 @@ import itertools
 import networkx as nx
 import matplotlib.pyplot as plt
 import time
-from itertools import product, chain
+from functools import reduce
+from numpy import linalg
 
 def compose(f1,f2):
     '''Assumes that f1 and f2 are dictionaries that represent functions.
@@ -17,44 +18,51 @@ def compose(f1,f2):
 
 class state_machine(object):
     
-    def __init__(self, Q, q0, delta:dict, sigma:set, accept_states:dict):
-        '''Q is the states, q0 is the inital state, delta is the transition function, sigma is the alphabet
-        delta := dict[letters: dict[states, states]]
-        accept states = {q:True if q is an accept state else q:False for q in Q}'''
-        assert q0 in Q, "q0 not in Q!"
-        assert all([d in sigma for d in delta.keys()]), "Key in delta not in sigma!"
-        self.Q = Q
-        self.q = q0
-        self.sigma = sigma
-        self.delta = delta
+    def __init__(self, initial, transitions:dict, accept_states:tuple, name_to_index:dict[str, int]):
+        '''self.name_to_index represents a mapping from strings naming each states to indices of self.v, not technically necessary but is helpful for clarity. 
+        self.accept_vector is a vector s.t. accept_vector dot v != 0 only if the machine is currently in an accept state'''
+
+        self.alphabet = set(transitions.keys())
+        self.states = set(name_to_index.keys())
+        self.name_to_index = name_to_index
+        self.index_to_name = {v:u for u,v in self.name_to_index.items()}
         
-        #TODO: Initialize in any way you see fit.
-       
+        if type(initial) == int:
+            self.v0 = initial
+        elif type(initial) == str:
+            self.v0 = self.name_to_index[initial]
+        else:
+            raise TypeError("Bad type was passed to initial, must be either int or str")
+        
+        if type(accept_states[0]) == str:
+            self.accept_vector = [1 if x in accept_states else 0 for x in range(len(self.alphabet))]
+        elif type(accept_states[0]) == int:
+            self.accept_vector = [1 if x in accept_states else 0 for x in range(len(self.alphabet))] #Use accept_vector dot v to see if the machine accepts
+            
+        self.transitions = transitions
+        
+        self.v = [1 if x==self.v0 else 0 for x in range(len(self.alphabet))]
+        
     #Operations on machines
     def iterative_match(self,input_string:str) -> bool:
         '''Assumes that the string is a string in the alphabet.
         Returns True or False, depending on whether or not the input_string is accepted.
         '''
+        
         if not input_string: #if input_string is empty
-            return self.accept_states[self.q] #True only if an accept state currently
+            return False if linalg.dot(self.accept_vector, self.v) == 0 else True #True only if an accept state currently
         else: 
-            self.q = self.delta[input_string[0]][self.q]
-            return self.iterative_match(input_string[1:])
+            self.v @= reduce(lambda x, y: x @ y, input_string)
+            return False if linalg.dot(self.accept_vector, self.v) == 0 else True
 
     def complement(self):
         '''Returns the complement machine, that accepts the strings that the original machine does not accept'''
-        return state_machine(self.Q, self.q0, self.delta, self.sigma, {q : not self.accept_states[q] for q in self.Q})
+        return state_machine(self.v0, self.transitions, )
 
     def intersection(self,other):
         '''other is assumed to be a machine with the same alphabet.
         returns a machine that accepts when both self and other accept.'''
-        alphabet = product(self.sigma, other.sigma)
-        delta = {a : {(u,v) : (self.delta[a][u], other.delta[a][v]) for u,v in product(self.Q, other.Q)} for a in alphabet}
-        accept_states = {(u,v) : u and v for u,v in product(self.Q, other.Q)}
-        return state_machine(product(self.Q, other.Q), (self.q0, other.q0), delta=delta, sigma=alphabet, accept_states=accept_states)
-    
-    def union(self, other):
-        return self.complement().intersection(other.complement()).complement()
+        pass
     
     @classmethod
     def init_from_partial_def(cls,transitions,initial,accept_states):
@@ -66,6 +74,6 @@ class state_machine(object):
 
         See state_machines_examples_template.py for examples.
         '''
-        states = set(chain([x.keys() for x in transitions.values()]))
+        states = set(*[x.keys() for x in transitions.values()])
         
         return state_machine(states, initial, transitions, transitions.keys(), {q : q in accept_states for q in states})   
