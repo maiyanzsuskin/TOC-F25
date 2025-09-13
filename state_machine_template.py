@@ -8,7 +8,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import time
 from functools import reduce
-from numpy import linalg, zeros, pad
+from numpy import linalg
 
 def compose(f1,f2):
     '''Assumes that f1 and f2 are dictionaries that represent functions.
@@ -20,7 +20,8 @@ class state_machine(object):
     
     def __init__(self, initial, transitions:dict, accept_states:set, name_to_index:dict[str, int]):
         '''self.name_to_index represents a mapping from strings naming each states to indices of self.v, not technically necessary but is helpful for clarity. 
-        self.accept_vector is a vector s.t. accept_vector dot v != 0 only if the machine is currently in an accept state'''
+        self.accept_vector is a vector s.t. accept_vector dot v != 0 only if the machine is currently in an accept state
+        transitions is a dict from letters of the alphabet to matrices'''
 
         self.alphabet = set(transitions.keys())
         self.states = set(name_to_index.keys())
@@ -74,6 +75,12 @@ class state_machine(object):
         states = itertools.product(self.states, other.states)
         accept_states = set([u+","+v for u,v in itertools.product(self.accept_states, other.accept_states)])
         name_to_index = {s : idx for idx, s in enumerate(states)}
+        
+        transitions = {a : linalg.tensordot(self.transitions[a], other.transitions[a]) for a in self.alphabet}
+
+        return state_machine(initial, transitions, accept_states, name_to_index)
+        
+
     
     @classmethod
     def init_from_partial_def(cls,transitions,initial,accept_states):
