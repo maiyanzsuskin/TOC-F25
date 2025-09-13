@@ -8,7 +8,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import time
 from functools import reduce
-from numpy import linalg
+from numpy import linalg, zeros, pad
 
 def compose(f1,f2):
     '''Assumes that f1 and f2 are dictionaries that represent functions.
@@ -18,7 +18,7 @@ def compose(f1,f2):
 
 class state_machine(object):
     
-    def __init__(self, initial, transitions:dict, accept_states:tuple, name_to_index:dict[str, int]):
+    def __init__(self, initial, transitions:dict, accept_states:set, name_to_index:dict[str, int]):
         '''self.name_to_index represents a mapping from strings naming each states to indices of self.v, not technically necessary but is helpful for clarity. 
         self.accept_vector is a vector s.t. accept_vector dot v != 0 only if the machine is currently in an accept state'''
 
@@ -26,6 +26,9 @@ class state_machine(object):
         self.states = set(name_to_index.keys())
         self.name_to_index = name_to_index
         self.index_to_name = {v:u for u,v in self.name_to_index.items()}
+        self.initial = initial
+        self.accept_states = accept_states
+        self.transitions = transitions
         
         if type(initial) == int:
             self.v0 = initial
@@ -39,7 +42,7 @@ class state_machine(object):
         elif type(accept_states[0]) == int:
             self.accept_vector = [1 if x in accept_states else 0 for x in range(len(self.alphabet))] #Use accept_vector dot v to see if the machine accepts
             
-        self.transitions = transitions
+        
         
         self.v = [1 if x==self.v0 else 0 for x in range(len(self.alphabet))]
         
@@ -57,12 +60,27 @@ class state_machine(object):
 
     def complement(self):
         '''Returns the complement machine, that accepts the strings that the original machine does not accept'''
-        return state_machine(self.v0, self.transitions, )
+        return state_machine(self.initial, self.transitions, self.states - self.accept_states, self.name_to_index)
 
     def intersection(self,other):
         '''other is assumed to be a machine with the same alphabet.
-        returns a machine that accepts when both self and other accept.'''
-        pass
+        returns a machine that accepts when both self and other accept.
+        
+        To avoid hash issues, use the convention that the str a,b represents the tuple (a,b). 
+        You can quickly recover from this using the split func'''
+        def concat_mat(A, B):
+            m = len(self.transitions[A])
+            n = len(self.transitions[B])
+            A_mat = pad(self.transitions[A], ((0, 0), (n, n)))
+            B_mat = pad(self.transitions[A], ((m, m), (0, 0)))
+            
+            return A_mat + B_mat
+
+
+        alphabet = set([u+","+v for u,v in itertools.product(self.alphabet, other.alphabet)])
+        accept_states = set([u+","+v for u,v in itertools.product(self.accept_states, other.accept_states)])
+        name_to_index = self.name_to_index.update({u : v+1+len(self.states) for u,v in other.name_to_index.items()})
+        transitions = {letter : concat_mat(letter.split(',')[0], letter.split(',')[1]) for letter in alphabet}
     
     @classmethod
     def init_from_partial_def(cls,transitions,initial,accept_states):
