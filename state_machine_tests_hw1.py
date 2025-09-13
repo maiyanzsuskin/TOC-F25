@@ -3,6 +3,7 @@ import numpy as np
 from state_machine_examples_template import *
 import unittest
 from gradescope_utils.autograder_utils.decorators import weight, number
+from random import randint, seed
 
 class CreateTests(TestCase):
     @weight(5)
@@ -41,6 +42,8 @@ class CreateTests(TestCase):
     @weight(5)
     @number('5')
     def test_implication_machines(self):
-        pass
-
+        seed(12345) #for reproducibility
+        b = randint(2,10)
+        k = randint(2,20)
+        
 unittest.main()

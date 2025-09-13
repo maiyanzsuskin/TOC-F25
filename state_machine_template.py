@@ -8,7 +8,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import time
 from functools import reduce
-from numpy import array, dot, kron
+from numpy import array, dot, kron, int32
 
 def compose(f1,f2):
     '''Assumes that f1 and f2 are dictionaries that represent functions.
@@ -61,9 +61,10 @@ class state_machine(object):
 
         if all([type(x)==str for x in accept_states]):
             self.accept_vector = array([1 if self.index_to_name[x] in self.accept_states else 0 for x in range(self.num_states)])
-        elif all([type(x)==int for x in accept_states]):
+        elif all([isinstance(x, (int, float, int32)) for x in accept_states]):
             self.accept_vector = array([1 if x in self.accept_states else 0 for x in range(self.num_states)]) #Use accept_vector dot v to see if the machine accepts
-
+        else:
+            raise TypeError("Unusual type in accept_states!")
     #Operations on machines
     def iterative_match(self,input_string:str) -> bool:
         '''Assumes that the string is a string in the alphabet.
@@ -87,17 +88,24 @@ class state_machine(object):
         To avoid hash issues, use the convention that the str a,b represents the tuple (a,b). 
         You can quickly recover from this using the split func'''
         assert self.alphabet == other.alphabet
-        assert self.name_to_index is not None and other.name_to_index is not None, "Requires named states. No I'm not gonna fix this"
-        
-        initial = self.initial + "," + other.initial
-        accept_states = set([u+","+v for u,v in itertools.product(self.accept_states, other.accept_states)])
-        m = len(self.index_to_name.keys())
-        n = len(other.index_to_name.keys())
-        index_to_name = {idx : self.index_to_name[idx//m]+','+other.index_to_name[idx % n] for idx in range(m*n)}
+        if self.name_to_index is not None or other.name_to_index is not None:
+            initial = self.initial + "," + other.initial
+            accept_states = set([u+","+v for u,v in itertools.product(self.accept_states, other.accept_states)])
+            m = len(self.index_to_name.keys())
+            n = len(other.index_to_name.keys())
+            index_to_name = {idx : self.index_to_name[idx//m]+','+other.index_to_name[idx % n] for idx in range(m*n)}
 
-        transitions = {a : kron(self.transitions[a], other.transitions[a]) for a in self.alphabet}
-        return state_machine(initial, transitions, accept_states, index_to_name=index_to_name) #whatever dude
-        
+            transitions = {a : kron(self.transitions[a], other.transitions[a]) for a in self.alphabet}
+            return state_machine(initial, transitions, accept_states, index_to_name=index_to_name) #whatever dude
+        else:
+            m = len(self.v)
+            n = len(other.v)
+            initial = m*self.v0 + other.v0
+            transitions = {a : kron(self.transitions[a], other.transitions[a]) for a in self.alphabet}
+
+            accept_states = {u*v for u,v in enumerate(kron(self.accept_vector, other.accept_vector))}
+            return state_machine(initial, transitions, accept_states, num_states=n*m)
+            
     @classmethod
     def init_from_partial_def(cls,transitions,initial,accept_states):
         '''
