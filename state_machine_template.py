@@ -63,12 +63,12 @@ class state_machine(object):
         if not input_string: #if input_string is empty
             return False if linalg.dot(self.accept_vector, self.v) == 0 else True #True only if an accept state currently
         else: 
-            self.v @= reduce(lambda x, y: x @ y, input_string)
+            self.v @= reduce(lambda x, y: x @ y, [self.transitions[a] for a in input_string])
             return False if linalg.dot(self.accept_vector, self.v) == 0 else True
 
     def complement(self):
         '''Returns the complement machine, that accepts the strings that the original machine does not accept'''
-        return state_machine(self.initial, self.transitions, self.states - self.accept_states, self.name_to_index)
+        return state_machine(self.initial, self.transitions, self.states - self.accept_states, self.name_to_index, self.states, self.alphabet)
 
     def intersection(self,other):
         '''other is assumed to be a machine with the same alphabet.
