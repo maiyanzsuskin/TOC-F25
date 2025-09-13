@@ -8,7 +8,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import time
 from functools import reduce
-from numpy import linalg
+from numpy import linalg, array, dot
 
 def compose(f1,f2):
     '''Assumes that f1 and f2 are dictionaries that represent functions.
@@ -30,7 +30,15 @@ class state_machine(object):
         if self.name_to_index is not None and self.index_to_name is None: self.index_to_name = {v:u for u,v in self.name_to_index.items()}
 
         self.states = kwargs.get("states")
-        if self.states is None: self.states = set(self.name_to_index.keys())
+        if self.states is None and self.name_to_index is not None: 
+            self.states = set(self.name_to_index.keys())
+
+        self.num_states = kwargs.get("num_states")
+        if self.num_states is None and self.states is not None:
+            self.num_states = len(self.states)
+        
+        if self.num_states is None and self.states is None:
+            raise ValueError("Need to specify either number of states or set of state names")
 
         self.alphabet = kwargs.get("alphabet")
         if self.alphabet is None: self.alphabet = set(transitions.keys())
@@ -38,22 +46,24 @@ class state_machine(object):
         self.accept_states = accept_states
         self.transitions = transitions
         
-        if type(initial) == int:
+        if type(initial) == int and self.index_to_name is not None:
             self.v0 = initial
             self.initial = self.index_to_name[initial]
-        elif type(initial) == str:
+        elif type(initial) == str and self.name_to_index is not None:
             self.v0 = self.name_to_index[initial]
             self.initial = initial
+        elif self.index_to_name is None and self.name_to_index is None and type(initial) == int:
+            self.v0 = initial
         else:
-            raise TypeError("Bad type was passed to initial, must be either int or str")
+            raise TypeError("Must specify some kind of mapping between named states and indices or else not name states")
         
-        if type(accept_states[0]) == str:
-            self.accept_vector = [1 if x in accept_states else 0 for x in range(len(self.alphabet))]
-        elif type(accept_states[0]) == int:
-            self.accept_vector = [1 if x in accept_states else 0 for x in range(len(self.alphabet))] #Use accept_vector dot v to see if the machine accepts
-            
-        self.v = [1 if x==self.v0 else 0 for x in range(len(self.alphabet))]
-        
+        self.v = array([1 if x==self.v0 else 0 for x in range(self.num_states)])
+
+        if all([type(x)==str for x in accept_states]):
+            self.accept_vector = array([1 if self.index_to_name[x] in self.accept_states else 0 for x in range(self.num_states)])
+        elif all([type(x)==int for x in accept_states]):
+            self.accept_vector = array([1 if x in self.accept_states else 0 for x in range(self.num_states)]) #Use accept_vector dot v to see if the machine accepts
+
     #Operations on machines
     def iterative_match(self,input_string:str) -> bool:
         '''Assumes that the string is a string in the alphabet.
@@ -61,14 +71,14 @@ class state_machine(object):
         '''
         
         if not input_string: #if input_string is empty
-            return False if linalg.dot(self.accept_vector, self.v) == 0 else True #True only if an accept state currently
+            return False if dot(self.accept_vector, self.v) == 0 else True #True only if an accept state currently
         else: 
-            self.v @= reduce(lambda x, y: x @ y, [self.transitions[a] for a in input_string])
-            return False if linalg.dot(self.accept_vector, self.v) == 0 else True
+            self.v = self.v @ reduce(lambda x, y: x @ y, [self.transitions[a] for a in input_string])
+            return False if dot(self.accept_vector, self.v) == 0 else True
 
     def complement(self):
         '''Returns the complement machine, that accepts the strings that the original machine does not accept'''
-        return state_machine(self.initial, self.transitions, self.states - self.accept_states, self.name_to_index, self.states, self.alphabet)
+        return state_machine(self.initial, self.transitions, self.states - self.accept_states, num_states = self.num_states, name_to_index=self.name_to_index)
 
     def intersection(self,other):
         '''other is assumed to be a machine with the same alphabet.
@@ -95,25 +105,34 @@ class state_machine(object):
 
         See state_machines_examples_template.py for examples.
         '''
-        states = set(itertools.chain(*transitions.values().items()))
-        assert "implied garbage state, this string is super long to prevent name collisions" not in set(itertools.chain(*transitions.values().items())), "Are we serious rn"
-        states = states.add("implied garbage state, this string is super long to prevent name collisions")
+        
+        states = set(itertools.chain(*[d.keys() for d in transitions.values()]))
+
+        isCompletelySpecified = all(
+                [set(d.keys())==states for d in transitions.values()]
+            )
+        
+        if not isCompletelySpecified:
+            assert "implied garbage state, this string is super long to prevent name collisions" not in states, "Are we serious rn"
+            states.add("implied garbage state, this string is super long to prevent name collisions")
+
         name_to_index = {s : idx for idx, s in enumerate(states)}
         index_to_name = {v : u for u,v in name_to_index.items()}
         alphabet = transitions.keys()
 
         def make_transition_matrix(letter):
             transition_d = transitions[letter]
-            impl_garbage_idx = name_to_index["implied garbage state, this string is super long to prevent name collisions"]
-            impl_garbage_row = [1 if idx==impl_garbage_idx else 0 for idx in range(len(states))]
+            
             matrix = [[1 if i==name_to_index[transition_d[index_to_name[idx]]] else 0 for i in range(len(states))] for idx in range(len(states))]
+            
+            if not isCompletelySpecified:
+                impl_garbage_idx = name_to_index["implied garbage state, this string is super long to prevent name collisions"]
+                impl_garbage_row = [1 if idx==impl_garbage_idx else 0 for idx in range(len(states))]
+                for idx, row in enumerate(matrix):
+                    if all([ele==0 for ele in row]):
+                        matrix[idx] = impl_garbage_row
 
-            for idx, row in enumerate(matrix):
-                if all([ele==0 for ele in row]):
-                    matrix[idx] = impl_garbage_row
-
-            return matrix
-
+            return array(matrix)
 
         m_transitions = {a : make_transition_matrix(a) for a in alphabet}
 
