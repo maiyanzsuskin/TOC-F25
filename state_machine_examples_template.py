@@ -65,12 +65,15 @@ def letter_counting_machine(multiple_dict={'0':2, '1':3}):
     '''Assumes that multiple_dict is a dictionary whose keys are the letters
     The values are positive integers.
     The machine accepts iff letter appears a multiple of multiple_dict[letter] many times.'''
+    alphabet = multiple_dict.keys()
+
     def individual_machine(char, num) -> state_machine:
-        tr = {a : identity(num) if a!=char else flip(identity(num), axis=1)+pad(array([[1,-1],[-1,1]]), ((0, num-2),(num-2, 0))) for a in multiple_dict.keys()}
+        tr = {a : identity(num, dtype=int) if a!=char else flip(identity(num, dtype=int), axis=1)+pad(array([[1,-1],[-1,1]], dtype=int), ((0, num-2),(num-2, 0))) for a in alphabet}
         return state_machine(initial=0, transitions=tr, accept_states={0}, num_states=num)
 
     machines = [individual_machine(u,v) for u,v in multiple_dict.items()]
-    return reduce(lambda a,b: a.intersection(b), machines)
+    final = reduce(lambda a,b: a.intersection(b), machines)
+    return final
 
 def divisibility_machine(b,k):
     '''Returns a machine that accepts the strings of base-b that are divisible by k.

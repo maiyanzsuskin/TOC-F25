@@ -26,17 +26,23 @@ class state_machine(object):
         self.name_to_index = kwargs.get("name_to_index")
         self.index_to_name = kwargs.get("index_to_name")
 
+        
+
         if self.name_to_index is None and self.index_to_name is not None: self.name_to_index = {v:u for u,v in self.index_to_name.items()}
         if self.name_to_index is not None and self.index_to_name is None: self.index_to_name = {v:u for u,v in self.name_to_index.items()}
 
         self.states = kwargs.get("states")
         if self.states is None and self.name_to_index is not None: 
+            self.hasNamedStates = True
             self.states = set(self.name_to_index.keys())
 
         self.num_states = kwargs.get("num_states")
         if self.num_states is None and self.states is not None:
+            self.hasNamedStates = True
             self.num_states = len(self.states)
-        
+
+        self.hasNamedStates = False
+
         if self.num_states is None and self.states is None:
             raise ValueError("Need to specify either number of states or set of state names")
 
@@ -106,6 +112,9 @@ class state_machine(object):
             accept_states = {u*v for u,v in enumerate(kron(self.accept_vector, other.accept_vector))}
             return state_machine(initial, transitions, accept_states, num_states=n*m)
             
+    def __str__(self):
+        return "States: "+ str(self.states) + "\nTr: " + str(self.transitions) + "\nAccepts: " + str(self.accept_states)
+        
     @classmethod
     def init_from_partial_def(cls,transitions,initial,accept_states):
         '''
