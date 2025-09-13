@@ -26,14 +26,15 @@ class state_machine(object):
         self.states = set(name_to_index.keys())
         self.name_to_index = name_to_index
         self.index_to_name = {v:u for u,v in self.name_to_index.items()}
-        self.initial = initial
         self.accept_states = accept_states
         self.transitions = transitions
         
         if type(initial) == int:
             self.v0 = initial
+            self.initial = self.index_to_name[initial]
         elif type(initial) == str:
             self.v0 = self.name_to_index[initial]
+            self.initial = initial
         else:
             raise TypeError("Bad type was passed to initial, must be either int or str")
         
@@ -68,19 +69,11 @@ class state_machine(object):
         
         To avoid hash issues, use the convention that the str a,b represents the tuple (a,b). 
         You can quickly recover from this using the split func'''
-        def concat_mat(A, B):
-            m = len(self.transitions[A])
-            n = len(self.transitions[B])
-            A_mat = pad(self.transitions[A], ((0, 0), (n, n)))
-            B_mat = pad(self.transitions[A], ((m, m), (0, 0)))
-            
-            return A_mat + B_mat
-
-
-        alphabet = set([u+","+v for u,v in itertools.product(self.alphabet, other.alphabet)])
+        assert self.alphabet == other.alphabet
+        initial = self.initial + "," + other.initial
+        states = itertools.product(self.states, other.states)
         accept_states = set([u+","+v for u,v in itertools.product(self.accept_states, other.accept_states)])
-        name_to_index = self.name_to_index.update({u : v+1+len(self.states) for u,v in other.name_to_index.items()})
-        transitions = {letter : concat_mat(letter.split(',')[0], letter.split(',')[1]) for letter in alphabet}
+        name_to_index = {s : idx for idx, s in enumerate(states)}
     
     @classmethod
     def init_from_partial_def(cls,transitions,initial,accept_states):
@@ -92,6 +85,4 @@ class state_machine(object):
 
         See state_machines_examples_template.py for examples.
         '''
-        states = set(*[x.keys() for x in transitions.values()])
-        
-        return state_machine(states, initial, transitions, transitions.keys(), {q : q in accept_states for q in states})   
+        pass 
