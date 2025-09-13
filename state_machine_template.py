@@ -8,7 +8,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import time
 from functools import reduce
-from numpy import linalg, array, dot
+from numpy import array, dot, kron
 
 def compose(f1,f2):
     '''Assumes that f1 and f2 are dictionaries that represent functions.
@@ -87,13 +87,16 @@ class state_machine(object):
         To avoid hash issues, use the convention that the str a,b represents the tuple (a,b). 
         You can quickly recover from this using the split func'''
         assert self.alphabet == other.alphabet
-        initial = self.initial + "," + other.initial
-        states = itertools.product(self.states, other.states)
-        accept_states = set([u+","+v for u,v in itertools.product(self.accept_states, other.accept_states)])
+        assert self.name_to_index is not None and other.name_to_index is not None, "Requires named states. No I'm not gonna fix this"
         
-        transitions = {a : linalg.tensordot(self.transitions[a], other.transitions[a]) for a in self.alphabet}
+        initial = self.initial + "," + other.initial
+        accept_states = set([u+","+v for u,v in itertools.product(self.accept_states, other.accept_states)])
+        m = len(self.index_to_name.keys())
+        n = len(other.index_to_name.keys())
+        index_to_name = {idx : self.index_to_name[idx//m]+','+other.index_to_name[idx % n] for idx in range(m*n)}
 
-        return state_machine(initial, transitions, accept_states, states=states) #whatever dude
+        transitions = {a : kron(self.transitions[a], other.transitions[a]) for a in self.alphabet}
+        return state_machine(initial, transitions, accept_states, index_to_name=index_to_name) #whatever dude
         
     @classmethod
     def init_from_partial_def(cls,transitions,initial,accept_states):
