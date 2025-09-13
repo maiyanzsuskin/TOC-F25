@@ -85,8 +85,6 @@ class state_machine(object):
 
         return state_machine(initial, transitions, accept_states, states=states) #whatever dude
         
-
-    
     @classmethod
     def init_from_partial_def(cls,transitions,initial,accept_states):
         '''
@@ -97,4 +95,27 @@ class state_machine(object):
 
         See state_machines_examples_template.py for examples.
         '''
-        pass 
+        states = set(itertools.chain(*transitions.values().items()))
+        assert "implied garbage state, this string is super long to prevent name collisions" not in set(itertools.chain(*transitions.values().items())), "Are we serious rn"
+        states = states.add("implied garbage state, this string is super long to prevent name collisions")
+        name_to_index = {s : idx for idx, s in enumerate(states)}
+        index_to_name = {v : u for u,v in name_to_index.items()}
+        alphabet = transitions.keys()
+
+        def make_transition_matrix(letter):
+            transition_d = transitions[letter]
+            impl_garbage_idx = name_to_index["implied garbage state, this string is super long to prevent name collisions"]
+            impl_garbage_row = [1 if idx==impl_garbage_idx else 0 for idx in range(len(states))]
+            matrix = [[1 if i==name_to_index[transition_d[index_to_name[idx]]] else 0 for i in range(len(states))] for idx in range(len(states))]
+
+            for idx, row in enumerate(matrix):
+                if all([ele==0 for ele in row]):
+                    matrix[idx] = impl_garbage_row
+
+            return matrix
+
+
+        m_transitions = {a : make_transition_matrix(a) for a in alphabet}
+
+        return state_machine(initial, m_transitions, set(accept_states), alphabet=alphabet, states=states, name_to_index=name_to_index)
+        
