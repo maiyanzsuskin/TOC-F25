@@ -18,15 +18,23 @@ def compose(f1,f2):
 
 class state_machine(object):
     
-    def __init__(self, initial, transitions:dict, accept_states:set, name_to_index:dict[str, int]):
+    def __init__(self, initial, transitions:dict, accept_states:set, **kwargs):
         '''self.name_to_index represents a mapping from strings naming each states to indices of self.v, not technically necessary but is helpful for clarity. 
         self.accept_vector is a vector s.t. accept_vector dot v != 0 only if the machine is currently in an accept state
         transitions is a dict from letters of the alphabet to matrices'''
 
-        self.alphabet = set(transitions.keys())
-        self.states = set(name_to_index.keys())
-        self.name_to_index = name_to_index
-        self.index_to_name = {v:u for u,v in self.name_to_index.items()}
+        self.name_to_index = kwargs.get("name_to_index")
+        self.index_to_name = kwargs.get("index_to_name")
+
+        if self.name_to_index is None and self.index_to_name is not None: self.name_to_index = {v:u for u,v in self.index_to_name.items()}
+        if self.name_to_index is not None and self.index_to_name is None: self.index_to_name = {v:u for u,v in self.name_to_index.items()}
+
+        self.states = kwargs.get("states")
+        if self.states is None: self.states = set(self.name_to_index.keys())
+
+        self.alphabet = kwargs.get("alphabet")
+        if self.alphabet is None: self.alphabet = set(transitions.keys())
+        
         self.accept_states = accept_states
         self.transitions = transitions
         
@@ -44,8 +52,6 @@ class state_machine(object):
         elif type(accept_states[0]) == int:
             self.accept_vector = [1 if x in accept_states else 0 for x in range(len(self.alphabet))] #Use accept_vector dot v to see if the machine accepts
             
-        
-        
         self.v = [1 if x==self.v0 else 0 for x in range(len(self.alphabet))]
         
     #Operations on machines
@@ -74,11 +80,10 @@ class state_machine(object):
         initial = self.initial + "," + other.initial
         states = itertools.product(self.states, other.states)
         accept_states = set([u+","+v for u,v in itertools.product(self.accept_states, other.accept_states)])
-        name_to_index = {s : idx for idx, s in enumerate(states)}
         
         transitions = {a : linalg.tensordot(self.transitions[a], other.transitions[a]) for a in self.alphabet}
 
-        return state_machine(initial, transitions, accept_states, name_to_index)
+        return state_machine(initial, transitions, accept_states, states=states) #whatever dude
         
 
     
