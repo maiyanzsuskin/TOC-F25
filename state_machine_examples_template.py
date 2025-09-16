@@ -68,12 +68,13 @@ def letter_counting_machine(multiple_dict={'0':2, '1':3}):
     alphabet = multiple_dict.keys()
 
     def individual_machine(char, num) -> state_machine:
-        tr = {a : identity(num, dtype=int) if a!=char else flip(identity(num, dtype=int), axis=1)+pad(array([[1,-1],[-1,1]], dtype=int), ((0, num-2),(num-2, 0))) for a in alphabet}
-        return state_machine(initial=0, transitions=tr, accept_states={0}, num_states=num)
+        state_names = [f"q{n}" for n in range(num)]
+        tr = {a : {f"q{n}":f"q{n}" if a==char else f"q{n+1 if n+1<num else 0}" for n in range(num)} for a in alphabet}
+        
+        return state_machine(tr, "q0", {"q0"})
 
     machines = [individual_machine(u,v) for u,v in multiple_dict.items()]
     final = reduce(lambda a,b: a.intersection(b), machines)
-    print(final)
     return final
 
 def divisibility_machine(b,k):

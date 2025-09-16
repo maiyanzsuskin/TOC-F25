@@ -41,5 +41,11 @@ class CreateTests(TestCase):
     @weight(5)
     @number('5')
     def test_implication_machines(self):
-        pass
+        M = implication_machine()
+        print(M)
+        assert M.iterative_match('T')
+        assert not M.iterative_match('FT')
+        assert not M.iterative_match('FFFFFFFFFFFFFFFFT')
+
+
 unittest.main()
