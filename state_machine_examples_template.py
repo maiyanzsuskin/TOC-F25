@@ -73,6 +73,7 @@ def letter_counting_machine(multiple_dict={'0':2, '1':3}):
 
     machines = [individual_machine(u,v) for u,v in multiple_dict.items()]
     final = reduce(lambda a,b: a.intersection(b), machines)
+    print(final)
     return final
 
 def divisibility_machine(b,k):

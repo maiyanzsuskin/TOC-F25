@@ -26,8 +26,6 @@ class state_machine(object):
         self.name_to_index = kwargs.get("name_to_index")
         self.index_to_name = kwargs.get("index_to_name")
 
-        
-
         if self.name_to_index is None and self.index_to_name is not None: self.name_to_index = {v:u for u,v in self.index_to_name.items()}
         if self.name_to_index is not None and self.index_to_name is None: self.index_to_name = {v:u for u,v in self.name_to_index.items()}
 
@@ -95,11 +93,11 @@ class state_machine(object):
         You can quickly recover from this using the split func'''
         assert self.alphabet == other.alphabet
         if self.name_to_index is not None or other.name_to_index is not None:
-            initial = self.initial + "," + other.initial
-            accept_states = set([u+","+v for u,v in itertools.product(self.accept_states, other.accept_states)])
+            initial = (self.initial, other.initial)
+            accept_states = set([(u,v) for u,v in itertools.product(self.accept_states, other.accept_states)])
             m = len(self.index_to_name.keys())
             n = len(other.index_to_name.keys())
-            index_to_name = {idx : self.index_to_name[idx//m]+','+other.index_to_name[idx % n] for idx in range(m*n)}
+            index_to_name = {idx : (self.index_to_name[idx//m], other.index_to_name[idx % n]) for idx in range(m*n)}
 
             transitions = {a : kron(self.transitions[a], other.transitions[a]) for a in self.alphabet}
             return state_machine(initial, transitions, accept_states, index_to_name=index_to_name) #whatever dude
@@ -113,7 +111,7 @@ class state_machine(object):
             return state_machine(initial, transitions, accept_states, num_states=n*m)
             
     def __str__(self):
-        return "States: "+ str(self.states) + "\nTr: " + str(self.transitions) + "\nAccepts: " + str(self.accept_states)
+        return "\nStates: "+ str(self.states) + "\nTr: " + str(self.transitions) + "\nAccepts: " + str(self.accept_vector) + "\n-------------------------------------------------"
         
     @classmethod
     def init_from_partial_def(cls,transitions,initial,accept_states):
