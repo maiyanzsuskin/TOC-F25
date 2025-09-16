@@ -14,7 +14,6 @@ def compose(f1,f2):
     return {key:f2[f1[key]] for key in f1.keys()}
 
 class state_machine(object):
-    
     def __init__(self, transitions:dict, initial:str, accept_states:set):
        self.transitions = transitions
        self.initial = initial
@@ -32,12 +31,12 @@ class state_machine(object):
         if not input_string: #if input_string is empty
             return self.q in self.accept_states
         else:
-            self.q = self.transitions[input_string[-1]][self.q]
-            return self.iterative_match(input_string[:-1])    
+            self.q = self.transitions[input_string[0]][self.q]
+            return self.iterative_match(input_string[1:])    
 
     def complement(self):
         '''Returns the complement machine, that accepts the strings that the original machine does not accept'''
-        return state_machine(self.initial, self.transitions, self.states - self.accept_states)
+        return state_machine(self.transitions, self.initial, self.states - self.accept_states)
 
     def intersection(self,other):
         '''other is assumed to be a machine with the same alphabet.
@@ -45,7 +44,7 @@ class state_machine(object):
         '''
         init = (self.initial, other.initial)
         states = itertools.product(self.states, other.states)
-        tr = {a : {s : (self.transitions[a][s[0], other.transitions[a][s[1]]]) for s in states} for a in self.alphabet.union(other.alphabet)}
+        tr = {a : {s : (self.transitions[a][s[0]], other.transitions[a][s[1]]) for s in states} for a in self.alphabet.union(other.alphabet)}
         accept_states = set(itertools.product(self.accept_states, other.accept_states))
         return state_machine(tr, init, accept_states)
         
