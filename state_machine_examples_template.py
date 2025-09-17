@@ -66,7 +66,7 @@ def letter_counting_machine(multiple_dict={'0':2, '1':3}):
     The machine accepts iff letter appears a multiple of multiple_dict[letter] many times.'''
     alphabet = set(multiple_dict.keys())
     def single_machine(char, num):
-        tr = {a : {f"{char} q{n}" : f"{char} q{n}" for n in range(num)} if a!=char else {f"{char} q{n}" : f"{char} q{n+1 if n+1<num else 0}" for n in range(num)} for a in alphabet}
+        tr = {str(a) : {f"{char} q{n}" : f"{char} q{n}" for n in range(num)} if a!=char else {f"{char} q{n}" : f"{char} q{n+1 if n+1<num else 0}" for n in range(num)} for a in alphabet}
         initial = f"{char} q0"
         accept_states = {f"{char} q0"}
 
@@ -81,6 +81,6 @@ def divisibility_machine(b,k):
     The strings are read as usual with the most significant digit first from left-to-right, big endian style.
     '''
     alphabet = set(range(b))
-    tr = {a : {f"q{i}" : f"q{(i+a)%k}" for i in range(k)} for a in alphabet}
+    tr = {str(a) : {f"q{i}" : f"q{(i+a)%k}" for i in range(k)} for a in alphabet}
     return state_machine(tr, 'q0', {'q0'})
     
