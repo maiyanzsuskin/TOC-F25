@@ -1,4 +1,4 @@
 from state_machine_examples_template import *
 
-M = divisibility_machine(2, 3)
+M = letter_counting_machine({'0' : 2})
 print(M)
