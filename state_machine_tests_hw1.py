@@ -47,5 +47,4 @@ class CreateTests(TestCase):
         assert M.iterative_match('FF')
         assert M.iterative_match('FT')
 
-
 unittest.main()
