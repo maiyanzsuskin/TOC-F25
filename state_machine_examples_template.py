@@ -80,4 +80,8 @@ def divisibility_machine(b,k):
     Assumes b is between 2 and 10, k is between 2 and 20.
     The strings are read as usual with the most significant digit first from left-to-right, big endian style.
     '''
+    alphabet = set(range(b))
+    tr = {a : {} for a in alphabet}
+
+    return state_machine(tr, 'q0', {'q0'})
     pass
