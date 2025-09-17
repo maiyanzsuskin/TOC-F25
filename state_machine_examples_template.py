@@ -1,7 +1,6 @@
 #This file contains examples of finite state machines.
 from state_machine_template import *
 from functools import reduce
-from numpy import identity, flip, pad
 import random
 
 def basic_example_state_machine():
@@ -65,7 +64,16 @@ def letter_counting_machine(multiple_dict={'0':2, '1':3}):
     '''Assumes that multiple_dict is a dictionary whose keys are the letters
     The values are positive integers.
     The machine accepts iff letter appears a multiple of multiple_dict[letter] many times.'''
-    pass
+    alphabet = set(multiple_dict.keys())
+    def single_machine(char, num):
+        tr = {a : {f"{char} q{n}" : f"{char} q{n}" for n in range(num)} if a!=char else {f"{char} q{n}" : f"{char} q{n+1 if n+1<num else 0}" for n in range(num)} for a in alphabet}
+        initial = f"{char} q0"
+        accept_states = {f"{char} q0"}
+
+        return state_machine(tr, initial, accept_states)
+
+    machines = [single_machine(c,n) for c,n in multiple_dict.items()]
+    return reduce(lambda x,y: x.intersection(y), machines)
 
 def divisibility_machine(b,k):
     '''Returns a machine that accepts the strings of base-b that are divisible by k.
