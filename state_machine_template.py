@@ -21,7 +21,7 @@ class state_machine(object):
        self.alphabet = set(transitions.keys())
        self.states = set(itertools.chain(*[x.items() for x in transitions.values()]))
 
-       self.q = self.initial
+       self.curr_state = self.initial
   
     #Operations on machines
     def iterative_match(self,input_string:str) -> bool:
@@ -29,9 +29,9 @@ class state_machine(object):
         Returns True or False, depending on whether or not the input_string is accepted.
         '''
         if not input_string: #if input_string is empty
-            return self.q in self.accept_states
+            return self.curr_state in self.accept_states
         else:
-            self.q = self.transitions[input_string[0]][self.q]
+            self.curr_state = self.transitions[input_string[0]][self.curr_state]
             return self.iterative_match(input_string[1:])    
 
     def complement(self):

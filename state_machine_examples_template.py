@@ -59,7 +59,7 @@ def implication_machine():
              'prev_T':'prev_F',
              'prev_F':'prev_T'}
     }
-    return state_machine.init_from_partial_def(transitions, 'no_prev',['prev_T'])
+    return state_machine.init_from_partial_def(transitions, 'no_prev',{'prev_T'})
 
 def letter_counting_machine(multiple_dict={'0':2, '1':3}):
     '''Assumes that multiple_dict is a dictionary whose keys are the letters
