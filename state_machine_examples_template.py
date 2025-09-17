@@ -81,7 +81,6 @@ def divisibility_machine(b,k):
     The strings are read as usual with the most significant digit first from left-to-right, big endian style.
     '''
     alphabet = set(range(b))
-    tr = {a : {} for a in alphabet}
-
+    tr = {a : {f"q{i}" : f"q{(i+a)%k}" for i in range(k)} for a in alphabet}
     return state_machine(tr, 'q0', {'q0'})
-    pass
+    
