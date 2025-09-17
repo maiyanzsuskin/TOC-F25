@@ -28,11 +28,15 @@ class state_machine(object):
         '''Assumes that the string is a string in the alphabet.
         Returns True or False, depending on whether or not the input_string is accepted.
         '''
+        
         if not input_string: #if input_string is empty
-            return self.curr_state in self.accept_states
+            res = self.curr_state in self.accept_states
         else:
             self.curr_state = self.transitions[input_string[0]][self.curr_state]
-            return self.iterative_match(input_string[1:])    
+            res = self.iterative_match(input_string[1:])    
+        
+        self.curr_state = self.initial
+        return res
 
     def complement(self):
         '''Returns the complement machine, that accepts the strings that the original machine does not accept'''

@@ -44,7 +44,7 @@ class CreateTests(TestCase):
         M = implication_machine()
         assert M.iterative_match('TT')
         assert not M.iterative_match('TF')
-        assert M.iterative_match('FF')
         assert M.iterative_match('FT')
+        assert M.iterative_match('FF')
 
 unittest.main()
