@@ -54,7 +54,7 @@ class state_machine(object):
         return state_machine(tr, init, accept_states)
         
     def __str__(self):
-        return "\n".join(["Initial state: ", str(self.initial), "Accept states: ", str(self.accept_states), "Transitions: ", str(self.transitions)])
+        return "\n".join(["Initial state: ", str(self.initial), "Accept states: ", str(self.accept_states), "Transitions: ", str(self.transitions), "---------------------------------------------"])
 
     @classmethod
     def init_from_partial_def(cls,transitions,initial,accept_states):
