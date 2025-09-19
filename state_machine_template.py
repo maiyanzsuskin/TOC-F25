@@ -47,8 +47,8 @@ class state_machine(object):
         returns a machine that accepts when both self and other accept.
         '''
         init = (self.initial, other.initial)
-        states = set(itertools.product(self.states, other.states))
-        tr = {a : {s : (self.transitions[a][s[0]], other.transitions[a][s[1]]) for s in states} for a in self.alphabet | other.alphabet}
+        new_states = set(itertools.product(self.states, other.states))
+        tr = {a : {s : (self.transitions[a][s[0]], other.transitions[a][s[1]]) for s in new_states} for a in self.alphabet | other.alphabet}
         
         accept_states = set(itertools.product(self.accept_states, other.accept_states))
         return state_machine(tr, init, accept_states)
