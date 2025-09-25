@@ -14,13 +14,18 @@ def compose(f1,f2):
     return {key:f2[f1[key]] for key in f1.keys()}
 
 class state_machine(object):
-    def __init__(self, transitions:dict, initial:str, accept_states:set):
+    def __init__(self, transitions:dict, initial, accept_states:set):
        self.transitions = transitions
        self.initial = initial
        self.accept_states = set(accept_states)
        self.alphabet = set(transitions.keys())
-       self.states = set(itertools.chain(*[x.items() for x in transitions.values()]))
+       self.states = set()
+       st1 = [list(x.keys()) for x in self.transitions.values()]
+       st2 = [list(x.values()) for x in self.transitions.values()]
+       flat_st1 = {x for xs in st1 for x in xs}
+       flat_st2 = {x for xs in st2 for x in xs}
 
+       self.states = flat_st1 | flat_st2
        self.curr_state = self.initial
   
     #Operations on machines
@@ -48,7 +53,8 @@ class state_machine(object):
         '''
         init = (self.initial, other.initial)
         new_states = set(itertools.product(self.states, other.states))
-        tr = {a : {s : (self.transitions[a][s[0]], other.transitions[a][s[1]]) for s in new_states} for a in self.alphabet | other.alphabet}
+        print(self.transitions)
+        tr = {a : {s : (self.transitions[a][s[0]], other.transitions[a][s[1]]) for s in new_states} for a in self.alphabet}
         
         accept_states = set(itertools.product(self.accept_states, other.accept_states))
         return state_machine(tr, init, accept_states)

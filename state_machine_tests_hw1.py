@@ -36,6 +36,7 @@ class CreateTests(TestCase):
             for k in range(2,20):
                 for test_num in range(100):
                     M=divisibility_machine(b,k)
+                    print(f"b={b}, k={k}")
                     assert M.iterative_match(np.base_repr(test_num, b)) == (test_num %k==0)
 
     @weight(5)
