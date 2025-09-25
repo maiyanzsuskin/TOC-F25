@@ -1,7 +1,6 @@
 #This file contains examples of finite state machines.
 from state_machine_template import *
 from functools import reduce
-import random
 
 def basic_example_state_machine():
     '''A first example provided about how to use init_from_partial_def
