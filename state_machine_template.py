@@ -53,7 +53,6 @@ class state_machine(object):
         '''
         init = (self.initial, other.initial)
         new_states = set(itertools.product(self.states, other.states))
-        print(self.transitions)
         tr = {a : {s : (self.transitions[a][s[0]], other.transitions[a][s[1]]) for s in new_states} for a in self.alphabet}
         
         accept_states = set(itertools.product(self.accept_states, other.accept_states))
