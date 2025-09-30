@@ -76,11 +76,11 @@ def letter_counting_machine(multiple_dict={'0':2, '1':3}):
     return reduce(lambda x,y: x.intersection(y), machines)
 
 def divisibility_machine(b,k):
-    '''Returns a machine that accepts the strings of base-b that are divisible by k.
+    '''Returns a machine that accepts the strings of base b that are divisible by k.
     Assumes b is between 2 and 10, k is between 2 and 20.
     The strings are read as usual with the most significant digit first from left-to-right, big endian style.
     '''
     alphabet = set(range(b))
-    tr = {str(a) : {f"q{i}" : f"q{(i+a)%k}" for i in range(k)} for a in alphabet}
+    tr = {str(a) : {f"q{i}" : f"q{(i*b+a)%k}" for i in range(k)} for a in alphabet}
     return state_machine(tr, 'q0', {'q0'})
     
